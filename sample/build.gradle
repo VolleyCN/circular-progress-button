@@ -15,26 +15,14 @@ android {
     }
     buildTypes {
         release {
-            runProguard false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
-    applicationVariants.all { variant ->
-        def oldFile = variant.outputFile
-        def newPath = "${variant.name}" + "_" + "${variant.versionName}" + "_" + "${variant.versionCode}" + "_" + getDate() + ".apk";
-        variant.outputFile = new File(oldFile.parentFile, newPath)
-    }
-}
-
-def getDate() {
-    def formatter = new SimpleDateFormat('dd-MM-yyyy');
-    def date = new Date();
-    return formatter.format(date);
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 //    compile 'com.github.dmytrodanylyk.circular-progress-button:library:1.1.3-SNAPSHOT@aar'
-    compile project(':library')
+    implementation project(':library')
 }

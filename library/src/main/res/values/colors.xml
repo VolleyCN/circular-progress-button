@@ -6,6 +6,8 @@
     <color name="cpb_red">#ffff4444</color>
     <color name="cpb_red_dark">#ffcd3a3a</color>
     <color name="cpb_green">#ff99cc00</color>
-    <color name="cpb_green_dark">#ff6d9b00</color>
+    <color name="cpb_962eff">#ff962eff</color>
+    <color name="cpb_4046ec">#ff4046ec</color>
     <color name="cpb_white">@android:color/white</color>
+    <color name="cpb_green_dark">#ff6d9b00</color>
 </resources>

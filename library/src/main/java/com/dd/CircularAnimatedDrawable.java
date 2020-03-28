@@ -28,22 +28,31 @@ class CircularAnimatedDrawable extends Drawable implements Animatable {
     private ObjectAnimator mObjectAnimatorSweep;
     private ObjectAnimator mObjectAnimatorAngle;
     private boolean mModeAppearing;
-    private Paint mPaint;
+    private Paint mPaint, mBgPaint, mProBgPaint;
     private float mCurrentGlobalAngleOffset;
     private float mCurrentGlobalAngle;
     private float mCurrentSweepAngle;
     private float mBorderWidth;
     private boolean mRunning;
 
-    public CircularAnimatedDrawable(int color, float borderWidth) {
+    public CircularAnimatedDrawable(int colorIndicator, int colorProgress, int colorIndicatorBackground, float borderWidth) {
         mBorderWidth = borderWidth;
-
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(borderWidth);
-        mPaint.setColor(color);
+        mPaint.setColor(colorIndicator);
 
+        mBgPaint = new Paint();
+        mBgPaint.setAntiAlias(true);
+        mBgPaint.setStyle(Paint.Style.FILL);
+        mBgPaint.setColor(colorProgress);
+
+        mProBgPaint = new Paint();
+        mProBgPaint.setAntiAlias(true);
+        mProBgPaint.setStyle(Paint.Style.STROKE);
+        mProBgPaint.setStrokeWidth(borderWidth + 2);
+        mProBgPaint.setColor(colorIndicatorBackground);
         setupAnimations();
     }
 
@@ -57,6 +66,8 @@ class CircularAnimatedDrawable extends Drawable implements Animatable {
         } else {
             sweepAngle += MIN_SWEEP_ANGLE;
         }
+        canvas.drawArc(fBounds, 0, 360, false, mProBgPaint);
+        canvas.drawArc(fBounds, 0, 360, false, mBgPaint);
         canvas.drawArc(fBounds, startAngle, sweepAngle, false, mPaint);
     }
 
@@ -91,18 +102,18 @@ class CircularAnimatedDrawable extends Drawable implements Animatable {
         fBounds.bottom = bounds.bottom - mBorderWidth / 2f - .5f;
     }
 
-    private Property<CircularAnimatedDrawable, Float> mAngleProperty  =
+    private Property<CircularAnimatedDrawable, Float> mAngleProperty =
             new Property<CircularAnimatedDrawable, Float>(Float.class, "angle") {
-        @Override
-        public Float get(CircularAnimatedDrawable object) {
-            return object.getCurrentGlobalAngle();
-        }
+                @Override
+                public Float get(CircularAnimatedDrawable object) {
+                    return object.getCurrentGlobalAngle();
+                }
 
-        @Override
-        public void set(CircularAnimatedDrawable object, Float value) {
-            object.setCurrentGlobalAngle(value);
-        }
-    };
+                @Override
+                public void set(CircularAnimatedDrawable object, Float value) {
+                    object.setCurrentGlobalAngle(value);
+                }
+            };
 
     private Property<CircularAnimatedDrawable, Float> mSweepProperty
             = new Property<CircularAnimatedDrawable, Float>(Float.class, "arc") {

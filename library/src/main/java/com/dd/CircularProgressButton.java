@@ -1,7 +1,5 @@
 package com.dd;
 
-import com.dd.circular.progress.button.R;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -16,6 +14,8 @@ import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.StateSet;
 import android.widget.Button;
+
+import com.dd.circular.progress.button.R;
 
 public class CircularProgressButton extends Button {
 
@@ -36,6 +36,7 @@ public class CircularProgressButton extends Button {
     private StateListDrawable mCompleteStateDrawable;
     private StateListDrawable mErrorStateDrawable;
 
+
     private StateManager mStateManager;
     private State mState;
     private String mIdleText;
@@ -46,6 +47,8 @@ public class CircularProgressButton extends Button {
     private int mColorProgress;
     private int mColorIndicator;
     private int mColorIndicatorBackground;
+    private int mColorGradualStart;
+    private int mColorGradualEnd;
     private int mIconComplete;
     private int mIconError;
     private int mStrokeWidth;
@@ -95,42 +98,62 @@ public class CircularProgressButton extends Button {
 
     private void initErrorStateDrawable() {
         int colorPressed = getPressedColor(mErrorColorState);
-
-        StrokeGradientDrawable drawablePressed = createDrawable(colorPressed);
+        StrokeGradientDrawable drawablePressed;
+        if (mColorGradualStart != -1 && mColorGradualEnd != -1) {
+            drawablePressed = createDrawable(mColorGradualStart, mColorGradualEnd);
+        } else {
+            drawablePressed = createDrawable(colorPressed);
+        }
         mErrorStateDrawable = new StateListDrawable();
-
         mErrorStateDrawable.addState(new int[]{android.R.attr.state_pressed}, drawablePressed.getGradientDrawable());
         mErrorStateDrawable.addState(StateSet.WILD_CARD, background.getGradientDrawable());
     }
 
     private void initCompleteStateDrawable() {
+        StrokeGradientDrawable drawablePressed;
         int colorPressed = getPressedColor(mCompleteColorState);
-
-        StrokeGradientDrawable drawablePressed = createDrawable(colorPressed);
+        if (mColorGradualStart != -1 && mColorGradualEnd != -1) {
+            drawablePressed = createDrawable(mColorGradualStart, mColorGradualEnd);
+        } else {
+            drawablePressed = createDrawable(colorPressed);
+        }
         mCompleteStateDrawable = new StateListDrawable();
-
         mCompleteStateDrawable.addState(new int[]{android.R.attr.state_pressed}, drawablePressed.getGradientDrawable());
         mCompleteStateDrawable.addState(StateSet.WILD_CARD, background.getGradientDrawable());
     }
 
     private void initIdleStateDrawable() {
-        int colorNormal = getNormalColor(mIdleColorState);
-        int colorPressed = getPressedColor(mIdleColorState);
-        int colorFocused = getFocusedColor(mIdleColorState);
-        int colorDisabled = getDisabledColor(mIdleColorState);
-        if (background == null) {
-            background = createDrawable(colorNormal);
+        try {
+            StrokeGradientDrawable drawableDisabled;
+            StrokeGradientDrawable drawableFocused;
+            StrokeGradientDrawable drawablePressed;
+            if (mColorGradualStart != -1 && mColorGradualEnd != -1) {
+                drawableDisabled = createDrawable(mColorGradualStart, mColorGradualEnd);
+                drawableFocused = createDrawable(mColorGradualStart, mColorGradualEnd);
+                drawablePressed = createDrawable(mColorGradualStart, mColorGradualEnd);
+                if (background == null) {
+                    background = createDrawable(mColorGradualStart, mColorGradualEnd);
+                }
+            } else {
+                int colorNormal = getNormalColor(mIdleColorState);
+                int colorPressed = getPressedColor(mIdleColorState);
+                int colorFocused = getFocusedColor(mIdleColorState);
+                int colorDisabled = getDisabledColor(mIdleColorState);
+                if (background == null) {
+                    background = createDrawable(colorNormal);
+                }
+                drawableDisabled = createDrawable(colorDisabled);
+                drawableFocused = createDrawable(colorFocused);
+                drawablePressed = createDrawable(colorPressed);
+            }
+            mIdleStateDrawable = new StateListDrawable();
+            mIdleStateDrawable.addState(new int[]{android.R.attr.state_pressed}, drawablePressed.getGradientDrawable());
+            mIdleStateDrawable.addState(new int[]{android.R.attr.state_focused}, drawableFocused.getGradientDrawable());
+            mIdleStateDrawable.addState(new int[]{-android.R.attr.state_enabled}, drawableDisabled.getGradientDrawable());
+            mIdleStateDrawable.addState(StateSet.WILD_CARD, background.getGradientDrawable());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        StrokeGradientDrawable drawableDisabled = createDrawable(colorDisabled);
-        StrokeGradientDrawable drawableFocused = createDrawable(colorFocused);
-        StrokeGradientDrawable drawablePressed = createDrawable(colorPressed);
-        mIdleStateDrawable = new StateListDrawable();
-
-        mIdleStateDrawable.addState(new int[]{android.R.attr.state_pressed}, drawablePressed.getGradientDrawable());
-        mIdleStateDrawable.addState(new int[]{android.R.attr.state_focused}, drawableFocused.getGradientDrawable());
-        mIdleStateDrawable.addState(new int[]{-android.R.attr.state_enabled}, drawableDisabled.getGradientDrawable());
-        mIdleStateDrawable.addState(StateSet.WILD_CARD, background.getGradientDrawable());
     }
 
     private int getNormalColor(ColorStateList colorStateList) {
@@ -151,12 +174,21 @@ public class CircularProgressButton extends Button {
 
     private StrokeGradientDrawable createDrawable(int color) {
         GradientDrawable drawable = (GradientDrawable) getResources().getDrawable(R.drawable.cpb_background).mutate();
-        drawable.setColor(color);
         drawable.setCornerRadius(mCornerRadius);
+        drawable.setColor(color);
         StrokeGradientDrawable strokeGradientDrawable = new StrokeGradientDrawable(drawable);
         strokeGradientDrawable.setStrokeColor(color);
         strokeGradientDrawable.setStrokeWidth(mStrokeWidth);
+        return strokeGradientDrawable;
+    }
 
+    private StrokeGradientDrawable createDrawable(int startColor, int endColor) {
+        int[] colors = {startColor, endColor};
+        GradientDrawable drawable = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, colors);
+        drawable.setCornerRadius(mCornerRadius);
+        StrokeGradientDrawable strokeGradientDrawable = new StrokeGradientDrawable(drawable);
+        strokeGradientDrawable.setStrokeColor(startColor);
+        strokeGradientDrawable.setStrokeWidth(0);
         return strokeGradientDrawable;
     }
 
@@ -211,11 +243,14 @@ public class CircularProgressButton extends Button {
             int errorStateSelector = attr.getResourceId(R.styleable.CircularProgressButton_cpb_selectorError,
                     R.color.cpb_error_state_selector);
             mErrorColorState = getResources().getColorStateList(errorStateSelector);
+            mErrorColorState = getResources().getColorStateList(errorStateSelector);
 
             mColorProgress = attr.getColor(R.styleable.CircularProgressButton_cpb_colorProgress, white);
             mColorIndicator = attr.getColor(R.styleable.CircularProgressButton_cpb_colorIndicator, blue);
             mColorIndicatorBackground =
                     attr.getColor(R.styleable.CircularProgressButton_cpb_colorIndicatorBackground, grey);
+            mColorGradualStart = attr.getColor(R.styleable.CircularProgressButton_cpb_gradual_start_color, -1);
+            mColorGradualEnd = attr.getColor(R.styleable.CircularProgressButton_cpb_gradual_end_color, -1);
         } finally {
             attr.recycle();
         }
@@ -245,7 +280,7 @@ public class CircularProgressButton extends Button {
     private void drawIndeterminateProgress(Canvas canvas) {
         if (mAnimatedDrawable == null) {
             int offset = (getWidth() - getHeight()) / 2;
-            mAnimatedDrawable = new CircularAnimatedDrawable(mColorIndicator, mStrokeWidth);
+            mAnimatedDrawable = new CircularAnimatedDrawable(mColorIndicator, mColorProgress, mColorIndicatorBackground, mStrokeWidth);
             int left = offset + mPaddingProgress;
             int right = getWidth() - offset - mPaddingProgress;
             int bottom = getHeight() - mPaddingProgress;
